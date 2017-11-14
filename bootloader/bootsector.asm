@@ -1,7 +1,8 @@
-ORG 0x7c00
-BITS 16
+[BITS 16]
 
-segment .text
+section .text
+
+extern k_main
 
 init_rmode:
 	xor ax, ax
@@ -16,6 +17,16 @@ init_rmode:
 enable_A20:
 	mov ax, 0x2401
 	int 0x15
+
+; loading the kernel into memory
+disk_load:
+	mov dl, 0x80	; 1st HDD
+	xor dh, dh		; head 0
+	mov ch, 0		; cylinder 0
+	mov cl, 0x02	; start reading from 2nd sector 
+	mov al, 0x01	; #sectors to load - this value is hardcoded as of now & varies as per size of the final binary
+	mov bx, 0x7e00
+	call load_sectors
 
 
 ; switching to protected mode
@@ -36,23 +47,14 @@ init_pmode:
 	mov ss, ax
 
 	; initialize stack base and top
-	mov ebp, 0x8000
-	mov esp, 0x8000
-
+	mov ebp, 0x1000000
+	mov esp, 0x1000000
 
 pmode:
-	; testing protected mode
-	mov edx, VID_MEM
-	mov ah, 0x0f		; select color white on black
-	mov al, 'A'
-	mov word [edx], ax
+	call k_main ; jump to the kernel
 
-	jmp $
-
-
-%pathsearch gdt "gdt.inc"
 %include "bootloader/gdt.inc"
+%include "bootloader/disk.inc"
 
-VID_MEM equ 0xb8000
 times 510 - ($-$$) db 0
 dw 0xaa55

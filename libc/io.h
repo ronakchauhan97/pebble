@@ -20,7 +20,7 @@ void prints(char* s) {
 
 void clear() {
 	uint16_t *mem_loc = (uint16_t*) VID_MEM;
-	const uint16_t out = 0x0f00;
+	const uint16_t out = 0x0700;
 	int mem_offset = 0;
 	
 	for(int16_t i = 0; i < 25*80; i++) {	
